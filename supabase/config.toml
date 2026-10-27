@@ -1,0 +1,7 @@
+project_id = "hergmirclsutetrkshwh"
+
+[functions.ingest]
+verify_jwt = true
+
+[functions.chat]
+verify_jwt = true
