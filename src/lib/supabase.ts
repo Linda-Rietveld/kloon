@@ -3,8 +3,11 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('VITE_SUPABASE_URL en VITE_SUPABASE_ANON_KEY zijn verplicht in .env.local.')
-}
+export const supabaseConfigError = !supabaseUrl || !supabaseAnonKey
+  ? 'Vercel mist VITE_SUPABASE_URL en/of VITE_SUPABASE_ANON_KEY.'
+  : ''
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+export const supabase = createClient(
+  supabaseUrl ?? 'https://placeholder.supabase.co',
+  supabaseAnonKey ?? 'missing-supabase-anon-key',
+)

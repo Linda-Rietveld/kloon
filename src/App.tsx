@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useRef, useState } from 'react'
 import { BookOpen, Bot, CheckCircle2, ChevronRight, Copy, FileText, LogOut, Menu, MessageSquare, Mic, MoreHorizontal, Save, Send, ShieldCheck, SlidersHorizontal, Sparkles, Upload, UploadCloud, UserRound } from 'lucide-react'
-import { supabase } from './lib/supabase'
+import { supabase, supabaseConfigError } from './lib/supabase'
 import { askClone, getSystemPrompt, listDocuments, saveSystemPrompt, uploadDocument } from './lib/api'
 import type { ChatMessage, DocumentRecord } from './types'
 
@@ -18,6 +18,7 @@ function App() {
   const fileInput = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
+    if (supabaseConfigError) return
     if (window.location.search) window.history.replaceState({}, document.title, window.location.pathname)
     supabase.auth.getSession().then(({ data }) => setSession(Boolean(data.session)))
     const { data: listener } = supabase.auth.onAuthStateChange((_event, currentSession) => setSession(Boolean(currentSession)))
@@ -25,6 +26,7 @@ function App() {
   }, [])
 
   useEffect(() => {
+    if (supabaseConfigError) return
     if (!session) return
     Promise.all([listDocuments(), getSystemPrompt()]).then(([nextDocuments, nextPrompt]) => {
       setDocuments(nextDocuments)
@@ -101,6 +103,8 @@ function App() {
     setShowMobileNav(false)
   }
 
+  if (supabaseConfigError) return <ConfigErrorScreen message={supabaseConfigError} />
+
   return <main className="app-shell">
     <header className="site-header">
       <button className="mobile-menu" title="Menu openen" onClick={() => setShowMobileNav((value) => !value)}><Menu size={19} /></button>
@@ -118,6 +122,10 @@ function App() {
     </section>
     <input ref={fileInput} hidden type="file" accept=".pdf,.docx,.txt,.md,.csv,.json" onChange={handleUpload} />
   </main>
+}
+
+function ConfigErrorScreen({ message }: { message: string }) {
+  return <main className="auth-screen"><section className="auth-card config-error"><div className="brand"><div className="brand-mark"><Bot size={18} /></div><div><strong>Mijn Kloon</strong><span>persoonlijk AI-archief</span></div></div><span className="eyebrow">CONFIGURATIE NODIG</span><h1>De omgeving is nog niet verbonden.</h1><p>{message} Voeg deze variabelen toe in Vercel bij <strong>Settings → Environment Variables</strong> en maak daarna een nieuwe deployment:</p><ul><li><code>VITE_SUPABASE_URL</code></li><li><code>VITE_SUPABASE_ANON_KEY</code></li></ul></section></main>
 }
 
 function ChatView({ messages, question, setQuestion, onSubmit, busy, onSettings }: { messages: ChatMessage[]; question: string; setQuestion: (value: string) => void; onSubmit: (event: FormEvent<HTMLFormElement>) => void; busy: boolean; onSettings: () => void }) {
